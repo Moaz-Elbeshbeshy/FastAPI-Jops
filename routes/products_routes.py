@@ -1,6 +1,6 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from schemas.product_schema import ProductCreate, ProductResponse
+from schemas.product_schema import ProductCreateSchema, ProductResponseSchema
 from middleware.auth_middleware import get_current_user
 from db.database import get_db
 from controller.products_controller import (
@@ -15,24 +15,29 @@ from controller.products_controller import (
 router = APIRouter()
 
 
-@router.post("/", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=ProductResponseSchema, status_code=status.HTTP_201_CREATED
+)
 async def create_job_route(
-    product: ProductCreate,
+    product: ProductCreateSchema,
     user_email: str = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     return await create_product(product, user_email, db)
 
 
-@router.get("/", response_model=list[ProductResponse])
+@router.get("/", response_model=list[ProductResponseSchema])
 async def get_products_route(
+    response: Response,
     user_email: str = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    return await get_products(user_email, db)
+    products = await get_products(user_email, db)
+    response.headers["x-Total-Count"] = str(len(products))
+    return products
 
 
-@router.get("/{product_id}", response_model=ProductResponse)
+@router.get("/{product_id}", response_model=ProductResponseSchema)
 async def get_product_route(
     product_id: str,
     user_email: str = Depends(get_current_user),
@@ -41,14 +46,14 @@ async def get_product_route(
     return await get_product(product_id, user_email, db)
 
 
-@router.put("/{product_id}", response_model=ProductResponse)
+@router.put("/{product_id}", response_model=ProductResponseSchema)
 async def update_product_route(
     product_id: str,
-    product: ProductCreate,
+    product: ProductCreateSchema,
     user_email: str = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    return await update_product(product_id, user_email, db)
+    return await update_product(product_id, product, user_email, db)
 
 
 @router.delete("/{product_id}")

@@ -6,14 +6,14 @@ from datetime import datetime
 from typing import Optional
 
 
-class ProductCreate(BaseModel):
+class ProductCreateSchema(BaseModel):
     title: str
     manufacturer: str
     price: float
     description: str
 
 
-class ProductResponse(ProductCreate):
+class ProductResponseSchema(ProductCreateSchema):
     id: str
     user_id: str
     created_at: datetime
