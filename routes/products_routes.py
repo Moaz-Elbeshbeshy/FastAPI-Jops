@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, Depends, Response
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from schemas.product_schema import ProductCreateSchema, ProductResponseSchema
+from typing import Union, List
 from middleware.auth_middleware import get_current_user
 from db.database import get_db
 from controller.products_controller import (
@@ -16,14 +17,16 @@ router = APIRouter()
 
 
 @router.post(
-    "/", response_model=ProductResponseSchema, status_code=status.HTTP_201_CREATED
+    "/",
+    response_model=Union[ProductResponseSchema, List[ProductResponseSchema]],
+    status_code=status.HTTP_201_CREATED,
 )
-async def create_job_route(
-    product: ProductCreateSchema,
+async def create_product_route(
+    products: Union[ProductCreateSchema, List[ProductCreateSchema]],
     user_email: str = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
-    return await create_product(product, user_email, db)
+    return await create_product(products, user_email, db)
 
 
 @router.get("/", response_model=list[ProductResponseSchema])

@@ -1,25 +1,43 @@
 from fastapi import HTTPException, status
 from datetime import datetime, UTC
 from schemas.product_schema import ProductCreateSchema, ProductResponseSchema
+from typing import Union, List
 from bson import ObjectId, errors as bson_errors
 from pymongo import ReturnDocument
 
 
-async def create_product(product: ProductCreateSchema, user_email: str, db):
+async def create_product(
+    products: Union[ProductCreateSchema, List[ProductCreateSchema]], user_email: str, db
+):
     user = await db.users.find_one({"email": user_email})
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    product_dict = product.model_dump()
-    product_dict["user_id"] = str(user["_id"])
-    product_dict["created_at"] = datetime.now(UTC)
-    product_dict["updated_at"] = None
 
-    result = await db.products.insert_one(product_dict)
-    product_dict["id"] = str(result.inserted_id)
+    if not isinstance(products, list):
+        products = [products]
 
-    return ProductResponseSchema(**product_dict)
+    print(products)
+    now = datetime.now(UTC)
+    product_dicts = []
+    for product in products:
+        data = product.model_dump()
+        data["user_id"] = str(user["_id"])
+        data["created_at"] = now
+        data["updated_at"] = None
+        product_dicts.append(data)
+
+    # This returns an InsertManyResult object that contains a list of the _ids
+    result = await db.products.insert_many(product_dicts)
+    print(result)
+
+    for i, _id in enumerate(result.inserted_ids):
+        product_dicts[i]["id"] = str(_id)
+
+    # Return response
+    responses = [ProductResponseSchema(**p) for p in product_dicts]
+    return responses[0] if len(responses) == 1 else responses
 
 
 async def get_products(user_email: str, db):
