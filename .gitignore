@@ -1,0 +1,37 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
+.ENV/
+
+# Environment variables
+.env
+
+# OS/system files
+.DS_Store
+Thumbs.db
+
+# VSCode or other editor settings (if you use them)
+.vscode/
+.idea/
+
+# Test coverage or logs (optional but good if you have them later)
+*.log
+*.sqlite3
+.coverage
+htmlcov/
+*.pid
+
+# PyInstaller
+dist/
+build/
+*.spec
+
+# Jupyter Notebook checkpoints (if you use notebooks)
+.ipynb_checkpoints/
